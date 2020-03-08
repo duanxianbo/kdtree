@@ -1,5 +1,6 @@
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
+import edu.princeton.cs.algs4.Stack;
 
 import java.util.TreeSet;
 
@@ -42,6 +43,19 @@ public class PointSET {
     public Iterable<Point2D> range(
             RectHV rect)             // all points that are inside the rectangle (or on the boundary)
     {
+        Stack<Point2D> point2DS = new Stack<Point2D>();
+
+        if (this.isEmpty()) {
+            return point2DS;
+        }
+
+        for (Point2D point : this.bstTree) {
+            if (rect.contains(point)) {
+                point2DS.push(point);
+            }
+        }
+
+        return point2DS;
 
     }
 
@@ -51,16 +65,24 @@ public class PointSET {
         if (this.isEmpty()) {
             return null;
         }
+        Point2D nearestP = null;
         double distance = -1;
-        Point2D current = this.bstTree.;
 
-        while (distance == -1 && current != null) {
-            distance = this.getDistance();
+
+        for (Point2D point : this.bstTree) {
+            double currentDistance = this.getDistance(p, point);
+
+            if (nearestP == null || currentDistance < distance) {
+                distance = currentDistance;
+                nearestP = point;
+            }
+
         }
 
-        return null;
+        return nearestP;
 
     }
+
 
     private double getDistance(Point2D p1, Point2D p2) {
         return p1.distanceTo(p2);
