@@ -6,7 +6,6 @@ import java.util.TreeSet;
 
 public class PointSET {
     private TreeSet<Point2D> bstTree;
-    private int test;
 
 
     public PointSET()                               // construct an empty set of points
@@ -37,7 +36,9 @@ public class PointSET {
 
     public void draw()                         // draw all points to standard draw
     {
-
+        for (Point2D point : this.bstTree) {
+            point.draw();
+        }
     }
 
     public Iterable<Point2D> range(
