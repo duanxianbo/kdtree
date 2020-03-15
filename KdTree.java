@@ -208,7 +208,48 @@ public class KdTree {
     public Point2D nearest(
             Point2D p)             // a nearest neighbor in the set to point p; null if the set is empty
     {
-        return null;
+        StdDraw.setPenColor(StdDraw.BLACK);
+        StdDraw.setPenRadius(0.05);
+        p.draw();
+        Point2D nearest = this.root.p;
+
+        return this.getNearest(this.root, 2, true, nearest, p);
+    }
+
+    private Point2D getNearest(Node node, double distanceSquared, boolean compareX, Point2D nearest,
+                               Point2D p) {
+        if (node == null) {
+            return nearest;
+        }
+
+        double newDistanceSquared = node.p.distanceSquaredTo(p);
+        Point2D newNearest = newDistanceSquared < distanceSquared ? node.p : nearest;
+
+        double xDistanceSquared = Math.pow(p.x() - node.p.x(), 2);
+        double yDistanceSquared = Math.pow(p.y() - node.p.y(), 2);
+        double newNearestDistance = Math.min(newDistanceSquared, distanceSquared);
+
+        if (compareX && xDistanceSquared < distanceSquared
+                || !compareX && yDistanceSquared < distanceSquared) {
+            Point2D lbNearest = getNearest(node.lb, newNearestDistance, !compareX, newNearest, p);
+            Point2D rtNearest = getNearest(node.rt, newNearestDistance, !compareX, newNearest, p);
+
+            if (lbNearest.distanceSquaredTo(p) < rtNearest.distanceSquaredTo(p)) {
+                return lbNearest;
+            }
+            else {
+                return rtNearest;
+            }
+        }
+        else if (compareX && p.x() < node.p.x()
+                || !compareX && p.y() < node.p.y()) {
+            return getNearest(node.lb, newNearestDistance, !compareX, newNearest, p);
+        }
+        else {
+            return getNearest(node.rt, newNearestDistance, !compareX, newNearest, p);
+        }
+
+
     }
 
     static boolean isContains(double[] coords, double current) {
@@ -260,5 +301,15 @@ public class KdTree {
         for (Point2D point : points) {
             StdOut.printf("%8.6f %8.6f\n", point.x(), point.y());
         }
+
+        double queryX = StdRandom.uniform(0.0, 1.0);
+        double queryY = StdRandom.uniform(0.0, 1.0);
+
+        Point2D queryP = new Point2D(queryX, queryY);
+
+        Point2D nearest = kd.nearest(queryP);
+        StdDraw.setPenColor(StdDraw.BLUE);
+        StdDraw.setPenRadius(0.02);
+        StdDraw.line(queryX, queryY, nearest.x(), nearest.y());
     }
 }
