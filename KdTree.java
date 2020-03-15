@@ -139,6 +139,11 @@ public class KdTree {
             return;
         }
 
+        StdDraw.setPenRadius(0.05);
+        StdDraw.setPenColor(StdDraw.BLACK);
+        node.p.draw();
+        StdDraw.setPenRadius(0.01);
+
         if (compareX) {
             StdDraw.setPenColor(StdDraw.RED);
             StdDraw.line(node.p.x(), node.rect.ymin(), node.p.x(), node.rect.ymax());
@@ -155,9 +160,49 @@ public class KdTree {
     public Iterable<Point2D> range(
             RectHV rect)             // all points that are inside the rectangle (or on the boundary)
     {
-        Stack<Point2D> ranges = new Stack<Point2D>();
+        StdDraw.setPenColor(StdDraw.RED);
+        rect.draw();
+        Stack<Point2D> points = new Stack<Point2D>();
 
-        return ranges;
+        this.setRanges(this.root, rect, points, true);
+
+        return points;
+    }
+
+    private void setRanges(Node node, RectHV rect, Stack<Point2D> points, boolean compareX) {
+        if (node == null) {
+            return;
+        }
+
+        if (rect.contains(node.p)) {
+            points.push(node.p);
+        }
+
+        if (this.checkIntersect(node, rect, compareX)) {
+            this.setRanges(node.lb, rect, points, !compareX);
+            this.setRanges(node.rt, rect, points, !compareX);
+        }
+        else {
+            if (compareX && rect.xmax() < node.p.x() || !compareX && rect.ymax() < node.p.y()) {
+                this.setRanges(node.lb, rect, points, !compareX);
+            }
+            else {
+                this.setRanges(node.rt, rect, points, !compareX);
+            }
+        }
+    }
+
+
+    private boolean checkIntersect(Node node, RectHV rect, boolean compareX) {
+        if (rect.contains(node.p)) {
+            return true;
+        }
+
+        if (!compareX) {
+            return node.p.y() > rect.ymin() && node.p.y() < rect.ymax();
+        }
+
+        return node.p.x() > rect.xmin() && node.p.x() < rect.xmax();
     }
 
     public Point2D nearest(
@@ -165,6 +210,17 @@ public class KdTree {
     {
         return null;
     }
+
+    static boolean isContains(double[] coords, double current) {
+        for (double d : coords) {
+            if (d == current) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
     public static void main(
             String[] args)                  // unit testing of the methods (optional)
@@ -178,7 +234,31 @@ public class KdTree {
             StdOut.printf("%8.6f %8.6f\n", x, y);
         }
 
+        int index = 0;
+        double[] coords = new double[4];
+
+        while (index != 4) {
+            double current = StdRandom.uniform(0.0, 1.0);
+            if (!isContains(coords, current)) {
+                coords[index] = current;
+                index++;
+            }
+        }
+
+        double xmin = Math.min(coords[0], coords[2]);
+        double xmax = Math.max(coords[0], coords[2]);
+        double ymin = Math.min(coords[1], coords[3]);
+        double ymax = Math.max(coords[1], coords[3]);
+
+        RectHV queryRect = new RectHV(xmin, ymin, xmax, ymax);
+
+
         kd.draw();
 
+        Iterable<Point2D> points = kd.range(queryRect);
+        StdOut.printf("all points in ranges:\n");
+        for (Point2D point : points) {
+            StdOut.printf("%8.6f %8.6f\n", point.x(), point.y());
+        }
     }
 }
