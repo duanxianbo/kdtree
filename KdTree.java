@@ -252,7 +252,7 @@ public class KdTree {
 
     }
 
-    static boolean isContains(double[] coords, double current) {
+    private static boolean isContains(double[] coords, double current) {
         for (double d : coords) {
             if (d == current) {
                 return true;
