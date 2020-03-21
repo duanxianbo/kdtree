@@ -237,10 +237,27 @@ public class KdTree {
             return nearest;
         }
 
-        double xDistanceSquared = Math.pow(Math.abs(p.x() - node.p.x()), 2);
-        double yDistanceSquared = Math.pow(Math.abs(p.y() - node.p.y()), 2);
+        double distanceToRectSquared = -1;
+
+        if (compareX && p.x() > node.xmax) {
+            distanceToRectSquared = Math.pow(p.x() - node.xmax, 2);
+        }
+        else if (compareX && p.x() < node.xmin) {
+            distanceToRectSquared = Math.pow(node.xmin - p.x(), 2);
+        }
+        else if (!compareX && p.y() > node.ymax) {
+            distanceToRectSquared = Math.pow(p.y() - node.ymax, 2);
+        }
+        else if (!compareX && p.y() < node.ymin) {
+            distanceToRectSquared = Math.pow(node.ymin - p.y(), 2);
+        }
+
+
         double nearestDistance = nearest.distanceSquaredTo(p);
-        double coorDistanceSquared = compareX ? xDistanceSquared : yDistanceSquared;
+
+        if (distanceToRectSquared != -1 && distanceToRectSquared > nearestDistance) {
+            return nearest;
+        }
 
         double newDistanceSquared = node.p.distanceSquaredTo(p);
         Point2D newNearest = newDistanceSquared < nearestDistance ? node.p : nearest;
@@ -249,18 +266,10 @@ public class KdTree {
         if (compareX && (node.p.x() >= p.x()) || !compareX && (node.p.y() >= p.y())) {
             Point2D lbNearest = getNearest(node.lb, !compareX, newNearest, p);
 
-            if (lbNearest.distanceSquaredTo(p) <= coorDistanceSquared) {
-                return lbNearest;
-            }
-
             return getNearest(node.rt, !compareX, lbNearest, p);
         }
         else {
             Point2D rtNearest = getNearest(node.rt, !compareX, newNearest, p);
-
-            if (rtNearest.distanceSquaredTo(p) <= coorDistanceSquared) {
-                return rtNearest;
-            }
 
             return getNearest(node.lb, !compareX, rtNearest, p);
         }
