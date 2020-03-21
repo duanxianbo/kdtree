@@ -224,7 +224,8 @@ public class KdTree {
 
     private Point2D getNearest(Node node, double distanceSquared, boolean compareX, Point2D nearest,
                                Point2D p) {
-        if (node == null) {
+        if (node == null || compareX && (distanceSquared < Math.abs(node.p.x() - p.x()))
+                || !compareX && (distanceSquared < Math.abs(node.p.y() - p.y()))) {
             return nearest;
         }
 
@@ -234,6 +235,7 @@ public class KdTree {
         double xDistanceSquared = Math.pow(p.x() - node.p.x(), 2);
         double yDistanceSquared = Math.pow(p.y() - node.p.y(), 2);
         double newNearestDistance = Math.min(newDistanceSquared, distanceSquared);
+
 
         if (compareX && xDistanceSquared < distanceSquared
                 || !compareX && yDistanceSquared < distanceSquared) {
