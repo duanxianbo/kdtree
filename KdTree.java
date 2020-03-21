@@ -38,12 +38,15 @@ public class KdTree {
     }
 
     private int getSubTreeNumber(Node parent, int number) {
+
+
         if (parent == null) {
             return 0;
         }
 
-        number++;
-        return this.getSubTreeNumber(parent.lb, number) + this.getSubTreeNumber(parent.rt, number);
+
+        return this.getSubTreeNumber(parent.lb, number) + this.getSubTreeNumber(parent.rt, number)
+                + 1;
     }
 
     public void insert(
@@ -160,8 +163,6 @@ public class KdTree {
     public Iterable<Point2D> range(
             RectHV rect)             // all points that are inside the rectangle (or on the boundary)
     {
-        StdDraw.setPenColor(StdDraw.RED);
-        rect.draw();
         Stack<Point2D> points = new Stack<Point2D>();
 
         this.setRanges(this.root, rect, points, true);
@@ -208,9 +209,6 @@ public class KdTree {
     public Point2D nearest(
             Point2D p)             // a nearest neighbor in the set to point p; null if the set is empty
     {
-        StdDraw.setPenColor(StdDraw.BLACK);
-        StdDraw.setPenRadius(0.05);
-        p.draw();
         Point2D nearest = this.root.p;
 
         return this.getNearest(this.root, 2, true, nearest, p);
@@ -296,6 +294,8 @@ public class KdTree {
 
         kd.draw();
 
+        StdDraw.setPenColor(StdDraw.RED);
+        queryRect.draw();
         Iterable<Point2D> points = kd.range(queryRect);
         StdOut.printf("all points in ranges:\n");
         for (Point2D point : points) {
@@ -306,7 +306,9 @@ public class KdTree {
         double queryY = StdRandom.uniform(0.0, 1.0);
 
         Point2D queryP = new Point2D(queryX, queryY);
-
+        StdDraw.setPenColor(StdDraw.BLACK);
+        StdDraw.setPenRadius(0.05);
+        queryP.draw();
         Point2D nearest = kd.nearest(queryP);
         StdDraw.setPenColor(StdDraw.BLUE);
         StdDraw.setPenRadius(0.02);
