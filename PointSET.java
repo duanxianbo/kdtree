@@ -5,7 +5,7 @@ import edu.princeton.cs.algs4.Stack;
 import java.util.TreeSet;
 
 public class PointSET {
-    private TreeSet<Point2D> bstTree;
+    private final TreeSet<Point2D> bstTree;
 
 
     public PointSET()                               // construct an empty set of points
@@ -26,11 +26,17 @@ public class PointSET {
     public void insert(
             Point2D p)              // add the point to the set (if it is not already in the set)
     {
+        if (p == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
         this.bstTree.add(p);
     }
 
     public boolean contains(Point2D p)            // does the set contain point p?
     {
+        if (p == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
         return bstTree.contains(p);
     }
 
@@ -44,6 +50,9 @@ public class PointSET {
     public Iterable<Point2D> range(
             RectHV rect)             // all points that are inside the rectangle (or on the boundary)
     {
+        if (rect == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
         Stack<Point2D> point2DS = new Stack<Point2D>();
 
         if (this.isEmpty()) {
@@ -63,6 +72,9 @@ public class PointSET {
     public Point2D nearest(
             Point2D p)             // a nearest neighbor in the set to point p; null if the set is empty
     {
+        if (p == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
         if (this.isEmpty()) {
             return null;
         }
@@ -86,7 +98,7 @@ public class PointSET {
 
 
     private double getDistance(Point2D p1, Point2D p2) {
-        return p1.distanceTo(p2);
+        return p1.distanceSquaredTo(p2);
     }
 
     public static void main(String[] args) {

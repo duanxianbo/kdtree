@@ -9,17 +9,24 @@ public class KdTree {
     private Node root;
 
     private static class Node {
-        private Point2D p;      // the point
-        private RectHV rect;    // the axis-aligned rectangle corresponding to this node
+        private double xmin;
+        private double xmax;
+        private double ymin;
+        private double ymax;
+        private final Point2D p;      // the point
         private Node lb;        // the left/bottom subtree
         private Node rt;        // the right/top subtree
 
 
-        public Node(Point2D p, Node lb, Node rt, RectHV rect) {
+        public Node(Point2D p, Node lb, Node rt, double xmin, double ymin, double xmax,
+                    double ymax) {
             this.p = p;
             this.lb = lb;
             this.rt = rt;
-            this.rect = rect;
+            this.xmax = xmax;
+            this.xmin = xmin;
+            this.ymax = ymax;
+            this.ymin = ymin;
         }
     }
 
@@ -34,19 +41,15 @@ public class KdTree {
 
     public int size()                         // number of points in the set
     {
-        return this.getSubTreeNumber(this.root, 0);
+        return this.getSubTreeNumber(this.root);
     }
 
-    private int getSubTreeNumber(Node parent, int number) {
-
-
+    private int getSubTreeNumber(Node parent) {
         if (parent == null) {
             return 0;
         }
 
-
-        return this.getSubTreeNumber(parent.lb, number) + this.getSubTreeNumber(parent.rt, number)
-                + 1;
+        return this.getSubTreeNumber(parent.lb) + this.getSubTreeNumber(parent.rt) + 1;
     }
 
     public void insert(
@@ -56,35 +59,36 @@ public class KdTree {
             return;
         }
 
-        this.root = this.insertRec(this.root, p, true, new RectHV(0, 0, 1, 1));
+        this.root = this.insertRec(this.root, p, true, 0, 0, 1, 1);
     }
 
-    private Node insertRec(Node parent, Point2D p, boolean compareX, RectHV rect) {
+    private Node insertRec(Node parent, Point2D p, boolean compareX, double xmin, double ymin,
+                           double xmax,
+                           double ymax) {
         if (parent == null) {
-            return new Node(p, null, null, rect);
+            return new Node(p, null, null, xmin, ymin, xmax, ymax);
         }
 
-        parent.rect = rect;
+        parent.xmin = xmin;
+        parent.xmax = xmax;
+        parent.ymax = ymax;
+        parent.ymin = ymin;
 
         if (compareX) {
             if (parent.p.x() > p.x()) {
-                RectHV r = new RectHV(rect.xmin(), rect.ymin(), parent.p.x(), rect.ymax());
-                parent.lb = this.insertRec(parent.lb, p, false, r);
+                parent.lb = this.insertRec(parent.lb, p, false, xmin, ymin, parent.p.x(), ymax);
 
             }
             else {
-                RectHV r = new RectHV(parent.p.x(), rect.ymin(), rect.xmax(), rect.ymax());
-                parent.rt = this.insertRec(parent.rt, p, false, r);
+                parent.rt = this.insertRec(parent.rt, p, false, parent.p.x(), ymin, xmax, ymax);
             }
         }
         else {
             if (parent.p.y() > p.y()) {
-                RectHV r = new RectHV(rect.xmin(), rect.ymin(), rect.xmax(), parent.p.y());
-                parent.lb = this.insertRec(parent.lb, p, true, r);
+                parent.lb = this.insertRec(parent.lb, p, true, xmin, ymin, xmax, parent.p.y());
             }
             else {
-                RectHV r = new RectHV(rect.xmin(), parent.p.y(), rect.xmax(), rect.ymax());
-                parent.rt = this.insertRec(parent.rt, p, true, r);
+                parent.rt = this.insertRec(parent.rt, p, true, xmin, parent.p.y(), xmax, ymax);
             }
         }
 
@@ -132,7 +136,11 @@ public class KdTree {
 
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.setPenRadius(0.01);
-        this.root.rect.draw();
+
+
+        RectHV rect = new RectHV(0, 0, 1, 1);
+
+        rect.draw();
 
         this.drawLines(this.root, true);
     }
@@ -149,11 +157,11 @@ public class KdTree {
 
         if (compareX) {
             StdDraw.setPenColor(StdDraw.RED);
-            StdDraw.line(node.p.x(), node.rect.ymin(), node.p.x(), node.rect.ymax());
+            StdDraw.line(node.p.x(), node.ymin, node.p.x(), node.ymax);
         }
         else {
             StdDraw.setPenColor(StdDraw.BLUE);
-            StdDraw.line(node.rect.xmin(), node.p.y(), node.rect.xmax(), node.p.y());
+            StdDraw.line(node.xmin, node.p.y(), node.xmax, node.p.y());
         }
 
         this.drawLines(node.lb, !compareX);
