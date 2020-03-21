@@ -27,7 +27,7 @@ public class PointSET {
             Point2D p)              // add the point to the set (if it is not already in the set)
     {
         if (p == null) {
-            throw new java.lang.IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
         this.bstTree.add(p);
     }
@@ -35,7 +35,7 @@ public class PointSET {
     public boolean contains(Point2D p)            // does the set contain point p?
     {
         if (p == null) {
-            throw new java.lang.IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
         return bstTree.contains(p);
     }
@@ -51,7 +51,7 @@ public class PointSET {
             RectHV rect)             // all points that are inside the rectangle (or on the boundary)
     {
         if (rect == null) {
-            throw new java.lang.IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
         Stack<Point2D> point2DS = new Stack<Point2D>();
 
@@ -73,7 +73,7 @@ public class PointSET {
             Point2D p)             // a nearest neighbor in the set to point p; null if the set is empty
     {
         if (p == null) {
-            throw new java.lang.IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
         if (this.isEmpty()) {
             return null;
@@ -101,7 +101,4 @@ public class PointSET {
         return p1.distanceSquaredTo(p2);
     }
 
-    public static void main(String[] args) {
-
-    }
 }

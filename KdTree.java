@@ -7,6 +7,7 @@ import edu.princeton.cs.algs4.StdRandom;
 
 public class KdTree {
     private Node root;
+    private int size;
 
     private static class Node {
         private double xmin;
@@ -41,25 +42,23 @@ public class KdTree {
 
     public int size()                         // number of points in the set
     {
-        return this.getSubTreeNumber(this.root);
+        return this.size;
     }
 
-    private int getSubTreeNumber(Node parent) {
-        if (parent == null) {
-            return 0;
-        }
-
-        return this.getSubTreeNumber(parent.lb) + this.getSubTreeNumber(parent.rt) + 1;
-    }
 
     public void insert(
             Point2D p)              // add the point to the set (if it is not already in the set)
     {
+        if (p == null) {
+            throw new IllegalArgumentException();
+        }
+
         if (this.contains(p)) {
             return;
         }
 
         this.root = this.insertRec(this.root, p, true, 0, 0, 1, 1);
+        this.size++;
     }
 
     private Node insertRec(Node parent, Point2D p, boolean compareX, double xmin, double ymin,
@@ -98,6 +97,9 @@ public class KdTree {
 
     public boolean contains(Point2D p)            // does the set contain point p?
     {
+        if (p == null) {
+            throw new IllegalArgumentException();
+        }
         return this.containsP(this.root, p, true);
     }
 
@@ -150,7 +152,7 @@ public class KdTree {
             return;
         }
 
-        StdDraw.setPenRadius(0.05);
+        StdDraw.setPenRadius(0.02);
         StdDraw.setPenColor(StdDraw.BLACK);
         node.p.draw();
         StdDraw.setPenRadius(0.01);
@@ -171,6 +173,10 @@ public class KdTree {
     public Iterable<Point2D> range(
             RectHV rect)             // all points that are inside the rectangle (or on the boundary)
     {
+
+        if (rect == null) {
+            throw new IllegalArgumentException();
+        }
         Stack<Point2D> points = new Stack<Point2D>();
 
         this.setRanges(this.root, rect, points, true);
@@ -192,7 +198,7 @@ public class KdTree {
             this.setRanges(node.rt, rect, points, !compareX);
         }
         else {
-            if (compareX && rect.xmax() < node.p.x() || !compareX && rect.ymax() < node.p.y()) {
+            if (compareX && rect.xmax() <= node.p.x() || !compareX && rect.ymax() <= node.p.y()) {
                 this.setRanges(node.lb, rect, points, !compareX);
             }
             else {
@@ -217,47 +223,47 @@ public class KdTree {
     public Point2D nearest(
             Point2D p)             // a nearest neighbor in the set to point p; null if the set is empty
     {
-        Point2D nearest = this.root.p;
 
-        return this.getNearest(this.root, 2, true, nearest, p);
+        if (p == null) {
+            throw new IllegalArgumentException();
+        }
+
+        return this.getNearest(this.root, true, this.root.p, p);
     }
 
-    private Point2D getNearest(Node node, double distanceSquared, boolean compareX, Point2D nearest,
+    private Point2D getNearest(Node node, boolean compareX, Point2D nearest,
                                Point2D p) {
-        if (node == null || compareX && (distanceSquared < Math.abs(node.p.x() - p.x()))
-                || !compareX && (distanceSquared < Math.abs(node.p.y() - p.y()))) {
+        if (node == null) {
             return nearest;
         }
 
+        double xDistanceSquared = Math.pow(Math.abs(p.x() - node.p.x()), 2);
+        double yDistanceSquared = Math.pow(Math.abs(p.y() - node.p.y()), 2);
+        double nearestDistance = nearest.distanceSquaredTo(p);
+        double coorDistanceSquared = compareX ? xDistanceSquared : yDistanceSquared;
+
         double newDistanceSquared = node.p.distanceSquaredTo(p);
-        Point2D newNearest = newDistanceSquared < distanceSquared ? node.p : nearest;
-
-        double xDistanceSquared = Math.pow(p.x() - node.p.x(), 2);
-        double yDistanceSquared = Math.pow(p.y() - node.p.y(), 2);
-        double newNearestDistance = Math.min(newDistanceSquared, distanceSquared);
+        Point2D newNearest = newDistanceSquared < nearestDistance ? node.p : nearest;
 
 
-        if (compareX && xDistanceSquared < distanceSquared
-                || !compareX && yDistanceSquared < distanceSquared) {
-            Point2D lbNearest = getNearest(node.lb, newNearestDistance, !compareX, newNearest, p);
-            Point2D rtNearest = getNearest(node.rt, newNearestDistance, !compareX, newNearest, p);
+        if (compareX && (node.p.x() >= p.x()) || !compareX && (node.p.y() >= p.y())) {
+            Point2D lbNearest = getNearest(node.lb, !compareX, newNearest, p);
 
-            if (lbNearest.distanceSquaredTo(p) < rtNearest.distanceSquaredTo(p)) {
+            if (lbNearest.distanceSquaredTo(p) <= coorDistanceSquared) {
                 return lbNearest;
             }
-            else {
-                return rtNearest;
-            }
-        }
-        else if (compareX && p.x() < node.p.x()
-                || !compareX && p.y() < node.p.y()) {
-            return getNearest(node.lb, newNearestDistance, !compareX, newNearest, p);
+
+            return getNearest(node.rt, !compareX, lbNearest, p);
         }
         else {
-            return getNearest(node.rt, newNearestDistance, !compareX, newNearest, p);
+            Point2D rtNearest = getNearest(node.rt, !compareX, newNearest, p);
+
+            if (rtNearest.distanceSquaredTo(p) <= coorDistanceSquared) {
+                return rtNearest;
+            }
+
+            return getNearest(node.lb, !compareX, rtNearest, p);
         }
-
-
     }
 
     private static boolean isContains(double[] coords, double current) {
@@ -282,6 +288,7 @@ public class KdTree {
             kd.insert(new Point2D(x, y));
             StdOut.printf("%8.6f %8.6f\n", x, y);
         }
+
 
         int index = 0;
         double[] coords = new double[4];
@@ -310,18 +317,24 @@ public class KdTree {
         StdOut.printf("all points in ranges:\n");
         for (Point2D point : points) {
             StdOut.printf("%8.6f %8.6f\n", point.x(), point.y());
+
+            StdDraw.setPenColor(StdDraw.GREEN);
+            StdDraw.setPenRadius(0.03);
+            point.draw();
         }
 
         double queryX = StdRandom.uniform(0.0, 1.0);
         double queryY = StdRandom.uniform(0.0, 1.0);
 
+
         Point2D queryP = new Point2D(queryX, queryY);
-        StdDraw.setPenColor(StdDraw.BLACK);
-        StdDraw.setPenRadius(0.05);
+
+        StdDraw.setPenColor(StdDraw.YELLOW);
+        StdDraw.setPenRadius(0.02);
         queryP.draw();
         Point2D nearest = kd.nearest(queryP);
-        StdDraw.setPenColor(StdDraw.BLUE);
-        StdDraw.setPenRadius(0.02);
+        StdDraw.setPenColor(StdDraw.YELLOW);
+        StdDraw.setPenRadius(0.01);
         StdDraw.line(queryX, queryY, nearest.x(), nearest.y());
     }
 }
